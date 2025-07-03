@@ -6,9 +6,15 @@
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 
+# Ensure dependencies are installed
+using Pkg
+Pkg.activate(".")
+Pkg.instantiate()
+
 using CelestialMechanics
 using StaticArrays
 using Plots
+pyplot() # Use PyPlot backend
 
 # Define the bodies (Earth, Moon, Asteroid)
 earth = Body(5.972e24, @SVector([0.0, 0.0, 0.0]), @SVector([0.0, 0.0, 0.0]))

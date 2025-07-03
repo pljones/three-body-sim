@@ -14,6 +14,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
+# Add these at the top after the module/import declarations
+using Plots
+pyplot() # Use PyPlot backend instead of GR
+
 """
     plot_trajectory_3d(sol, system; kwargs...)
 
@@ -29,21 +34,22 @@ function plot_trajectory_3d(sol, system;
         title="Three-Body Trajectories",
         legend=:outertopright
     )
-    
+
     for i in 1:3
         positions = [[sol[j][i*6-5:i*6-3] for j in 1:length(sol)]]
         x = getindex.(positions[1], 1)
         y = getindex.(positions[1], 2)
         z = getindex.(positions[1], 3)
-        
+
         plot3d!(plt, x, y, z,
                 label=body_names[i],
                 color=colors[i],
                 linewidth=2)
     end
-    
+
     plt
 end
+
 
 """
     plot_asteroid_metrics(sol, system)

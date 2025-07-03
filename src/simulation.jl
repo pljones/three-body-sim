@@ -34,28 +34,29 @@ end
 
 ODE system evolution function for the three-body problem.
 """
-function system_evolution!(du, u, system, t)
-    # Reconstruct current state
-    positions = [SVector{3,Float64}(u[i:i+2]) for i in 1:6:18]
-    velocities = [SVector{3,Float64}(u[i:i+2]) for i in 4:6:18]
+function system_evolution!(du::Vector{Float64}, u::Vector{Float64}, system, t)
+    # Reconstruct current state - now using plain arrays instead of StaticArrays
+    positions = [u[i:i+2] for i in 1:6:18]
+    velocities = [u[i:i+2] for i in 4:6:18]
     
     # Calculate forces
-    forces = [@SVector zeros(3) for _ in 1:3]
+    forces = [zeros(3) for _ in 1:3]
     for i in 1:3, j in i+1:3
         f = gravitational_force(
-            Body(system.bodies[i].mass, positions[i], velocities[i]),
-            Body(system.bodies[j].mass, positions[j], velocities[j]),
+            Body(system.bodies[i].mass, SVector{3,Float64}(positions[i]), SVector{3,Float64}(velocities[i])),
+            Body(system.bodies[j].mass, SVector{3,Float64}(positions[j]), SVector{3,Float64}(velocities[j])),
             system.G
         )
-        forces[i] += f
-        forces[j] -= f
+        forces[i] .+= f
+        forces[j] .-= f
     end
     
-    # Update derivatives
+    # Update derivatives using plain array operations
     for i in 1:3
-        du[i*6-5:i*6-3] = velocities[i]  # position derivatives
-        du[i*6-2:i*6] = forces[i] / system.bodies[i].mass  # velocity derivatives
+        du[i*6-5:i*6-3] .= velocities[i]  # position derivatives
+        du[i*6-2:i*6] .= forces[i] ./ system.bodies[i].mass  # velocity derivatives
     end
+    nothing
 end
 
 """
@@ -64,7 +65,13 @@ end
 Convert system state to ODE solver format.
 """
 function get_state(system::ThreeBodySystem)
-    vcat([vcat(b.position, b.velocity) for b in system.bodies]...)
+    # Convert to plain Vector{Float64}
+    state = Float64[]
+    for body in system.bodies
+        append!(state, body.position)
+        append!(state, body.velocity)
+    end
+    state
 end
 
 """
@@ -91,7 +98,9 @@ function simulate_system(system::ThreeBodySystem, tspan;
                        save_interval=3600.0,  # Save every hour
                        reltol=1e-10,
                        abstol=1e-10)
-    prob = ODEProblem(system_evolution!, get_state(system), tspan, system)
+    # Create ODEProblem with Vector{Float64} initial conditions
+    initial_state = get_state(system)
+    prob = ODEProblem(system_evolution!, initial_state, tspan, system)
     solve(prob, Tsit5(),
           reltol=reltol,
           abstol=abstol,

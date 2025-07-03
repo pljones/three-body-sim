@@ -54,7 +54,13 @@ There are two ways you can try this repo out:
 $ git clone https://github.com/pljones/three-body-sim.git
 $ cd three-body-sim
 
-# Run the example simulation directly
+# Install system requirements (Ubuntu/Debian)
+$ sudo apt-get install python3-matplotlib
+
+# Install dependencies (only needed once)
+$ julia --project=. -e 'using Pkg; Pkg.instantiate()'
+
+# Run the example simulation
 $ julia --project=. examples/basic_simulation.jl
 
 # The script will generate:
